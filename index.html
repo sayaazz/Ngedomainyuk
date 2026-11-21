@@ -164,7 +164,7 @@ if (!isAdminPage) {
   function tampilPromo(box, d) {
     stopRedirect();
     const dom = domainIncaran();
-    const tujuan = dom ? 'https://order.idwebhost.com/domain-gratis/' + dom : d.promo_link;
+    const tujuan = dom ? d.promo_link + '/' + dom : d.promo_link;
     const teksArah = dom
       ? 'Kamu akan diarahkan otomatis ke halaman klaim <b>' + dom + '</b> dalam <b class="hitungMundur">8</b> detik. Kode promo otomatis tersalin, tinggal tempel di kolom Kode Kupon di sana, lalu daftar pakai akun Google buat klaim. Lupa kodenya? Cek lagi kapan pun di halaman ini pakai kode pesananmu.'
       : 'Kamu akan diarahkan otomatis ke IDwebhost dalam <b class="hitungMundur">8</b> detik buat redeem kode ini (di sana daftar pakai akun Google dulu). Kode promo otomatis tersalin, tinggal tempel di kolom Kode Kupon IDwebhost. Lupa kodenya? Cek lagi kapan pun di halaman ini pakai kode pesananmu.';
