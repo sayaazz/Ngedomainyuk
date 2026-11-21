@@ -23,6 +23,11 @@ export default async function handler(request) {
       return lib.jsonRes({ ok: true, orders: orders });
     }
 
+    if (action === 'log') {
+      const orders = await lib.loadOrders();
+      return lib.jsonRes({ ok: true, log: orders._log || [] });
+    }
+
     if (action === 'decide') {
       const kode = String(input.code || '').toUpperCase().trim();
       const keputusan = String(input.decision || '');
