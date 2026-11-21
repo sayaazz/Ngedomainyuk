@@ -1,8 +1,9 @@
 // Webhook penerima notifikasi donasi Saweria.
 // Saweria (menu Integration > Webhook) mengirim alert donasi ke alamat ini.
 // URL yang ditempel di Saweria wajib membawa ?secret=<WEBHOOK_SECRET>.
-// Pencocokan utama: nominal unik pesanan + kode pesanan (KD-XXXXXX)
-// yang ditulis pembeli di pesan / nama donatur. Cadangan: nominal unik saja.
+// Pencocokan utama: kode pesanan (KD-XXXXXX) yang ditulis pembeli di pesan /
+// nama donatur — nominal tidak wajib persis (donasi minimal Rp1.000).
+// Cadangan: nominal unik persis tanpa kode.
 // Payload mentah selalu dicatat ke log supaya format aslinya bisa diperiksa.
 import * as lib from '../../lib/shop.mjs';
 
@@ -40,14 +41,23 @@ export default async function handler(request) {
     if (amount <= 0) amount = lib.ekstrakNominal(pesan + ' ' + nama);
     const teksCari = (pesan + ' ' + nama).toUpperCase();
     const kodeDiPesan = (teksCari.match(/KD-[A-Z0-9]{6}/) || [null])[0];
+    const norm = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const teksNorm = norm(pesan + ' ' + nama);
 
     const orders = await lib.loadOrders();
     let cocok = null;
     let cara = '';
-    if (kodeDiPesan && orders[kodeDiPesan]) {
-      const o = orders[kodeDiPesan];
-      if (o.status === 'pending' && o.total === amount && !lib.kedaluwarsa(o)) { cocok = kodeDiPesan; cara = 'kode+nominal'; }
+    // Jalur utama: kode pesanan tertulis di pesan/nama donatur, format bebas
+    // (huruf besar/kecil, pakai strip atau tidak). Nominal tidak wajib persis,
+    // tapi donasi minimal harus seharga dasar Rp1.000.
+    if (amount >= 1000) {
+      for (const kode of Object.keys(orders)) {
+        if (kode.startsWith('_')) continue;
+        const o = orders[kode];
+        if (o.status === 'pending' && !lib.kedaluwarsa(o) && teksNorm.includes(norm(kode))) { cocok = kode; cara = 'kode'; break; }
+      }
     }
+    // Cadangan: nominal unik persis tanpa kode.
     if (!cocok && amount > 0) {
       for (const kode of Object.keys(orders)) {
         if (kode.startsWith('_')) continue;
@@ -59,7 +69,7 @@ export default async function handler(request) {
       orders[cocok].status = 'approved';
       orders[cocok].diputuskan = lib.waktuWIB();
       orders[cocok].via = 'saweria';
-      lib.catatLog(orders, 'SAWERIA COCOK (' + cara + ') nominal ' + amount + ' -> ' + cocok + ' | mentah=' + mentah);
+      lib.catatLog(orders, 'SAWERIA COCOK (' + cara + ') dibayar ' + amount + ' dari total ' + orders[cocok].total + ' -> ' + cocok + ' | mentah=' + mentah);
       await lib.saveOrders(orders);
       return lib.jsonRes({ ok: true, matched: true, order: cocok });
     }
