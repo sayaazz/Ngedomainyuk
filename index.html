@@ -48,32 +48,40 @@
   <header>
     <div class="brand">Kharqa</div>
     <h1>Domain .my.id 1 Tahun</h1>
-    <p class="sub">Dapatkan <b>kode promo domain .my.id untuk 1 tahun</b> di IDwebhost. Bayar pakai QRIS KHARQA, CINANGKA — begitu pembayaranmu terdeteksi sistem, <b>kode promo kebuka otomatis di halaman ini</b>. Tanpa nunggu, tanpa konfirmasi manual.</p>
+    <p class="sub">Dapatkan <b>kode promo domain .my.id untuk 1 tahun</b> di IDwebhost. Bayar lewat Saweria (QRIS, e-wallet, atau transfer bank) — begitu pembayaranmu terdeteksi sistem, <b>kode promo kebuka otomatis di halaman ini</b>. Tanpa nunggu, tanpa konfirmasi manual.</p>
   </header>
 
   <div class="card">
-    <span class="badge">BAYAR QRIS &middot; VERIFIKASI OTOMATIS</span>
+    <span class="badge">BAYAR VIA SAWERIA &middot; VERIFIKASI OTOMATIS</span>
     <div class="harga" style="margin-top:10px;">
       <div class="nominal">Rp1.000</div>
       <div class="ket">untuk 1 kode promo<br>domain .my.id / 1 tahun</div>
     </div>
-    <p class="kecil">Saat bayar, totalmu jadi Rp1.000 + kode unik 3 digit (contoh Rp1.137). Kode unik itu yang bikin sistem bisa mengenali pembayaranmu secara otomatis — QR yang tampil sudah mengunci nominalnya, jadi kamu tinggal scan dan bayar. Harga domain dan ketentuan promo mengikuti halaman resmi IDwebhost; yang kamu beli di sini adalah kode promonya.</p>
+    <p class="kecil">Saat bayar, totalmu jadi Rp1.000 + kode unik 3 digit (contoh Rp1.137). Kamu bayar total persis itu lewat Saweria dan menulis kode pesananmu di pesan donasi — dari situ sistem mengenali pembayaranmu secara otomatis. Harga domain dan ketentuan promo mengikuti halaman resmi IDwebhost; yang kamu beli di sini adalah kode promonya.</p>
   </div>
 
   <div class="card" id="orderCard">
-    <b>Langkah 1 — Buat QR bayarmu</b>
+    <b>Langkah 1 — Buat pesananmu</b>
     <label for="nama">Nama kamu</label>
     <input id="nama" type="text" placeholder="contoh: Budi" autocomplete="name">
-    <button id="btnOrder">Buat QR Bayar</button>
+    <button id="btnOrder">Buat Pesanan</button>
     <div id="orderMsg" class="pesan"></div>
   </div>
 
   <div class="card" id="payCard" style="display:none;">
-    <b>Langkah 2 — Scan &amp; bayar</b>
-    <div class="qrbox"><canvas id="qrCanvas"></canvas></div>
+    <b>Langkah 2 — Bayar lewat Saweria</b>
     <div class="total" id="totalBayar"></div>
-    <p class="kecil" style="text-align:center;">QRIS <b>KHARQA, CINANGKA</b> &middot; scan pakai GoPay, OVO, DANA, ShopeePay, atau m-banking apa pun. Nominal sudah terkunci di QR — bayar <b>persis</b> total di atas.</p>
-    <p class="kecil" style="text-align:center;">Kode pesananmu: <b id="kodePesanan"></b> &middot; berlaku <span id="menitBerlaku"></span> menit</p>
+    <p class="kecil" style="text-align:center;">Nominal yang harus kamu bayar di Saweria — <b>persis</b> angka ini, jangan dibulatkan.</p>
+    <div class="kodebesar" id="kodePesanan"></div>
+    <p class="kecil" style="text-align:center;">Tulis kode di atas di <b>pesan donasi</b> Saweria — wajib, biar sistem bisa mencocokkan pembayaranmu. Pesanan berlaku <span id="menitBerlaku"></span> menit.</p>
+    <a href="https://saweria.co/kharqa" target="_blank" rel="noopener"><button>Bayar via Saweria</button></a>
+    <ol class="langkah">
+      <li>Klik tombol <b>Bayar via Saweria</b> di atas.</li>
+      <li>Isi nominal <b>persis total pembayaranmu</b>.</li>
+      <li>Di kolom pesan donasi, tulis <b>kode pesananmu</b>.</li>
+      <li>Selesaikan pembayaran (QRIS / e-wallet / transfer bank).</li>
+      <li>Balik ke halaman ini — kode promo kebuka otomatis begitu pembayaran terdeteksi.</li>
+    </ol>
     <div id="payMsg" class="pesan info">Menunggu pembayaran terdeteksi… halaman ini ngecek sendiri tiap 4 detik. Jangan tutup halaman ini.</div>
     <div id="payPromo"></div>
   </div>
@@ -98,14 +106,14 @@
     </ol>
   </div>
 
-  <footer>Pembayaran diverifikasi otomatis dari notifikasi pembayaran QRIS penjual, dicocokkan dengan nominal unik pesananmu — bukan dari pengakuan pembeli.</footer>
+  <footer>Pembayaran diverifikasi otomatis dari notifikasi donasi Saweria penjual, dicocokkan dengan nominal unik dan kode pesananmu — bukan dari pengakuan pembeli.</footer>
 </div>
 
 <div id="adminView" style="display:none;">
   <header>
     <div class="brand">Kharqa — Admin Cadangan</div>
     <h1>Panel Cadangan</h1>
-    <p class="sub">Alur normalnya full otomatis dari notifikasi pembayaran. Panel ini cuma buat darurat, misalnya HP penjual mati waktu pembayaran masuk jadi notifikasi tidak terkirim ke server.</p>
+    <p class="sub">Alur normalnya full otomatis dari webhook Saweria. Panel ini cuma buat darurat, misalnya webhook tidak terkirim atau pembeli salah menulis kode pesanan.</p>
   </header>
 
   <div class="card" id="loginCard">
@@ -122,7 +130,6 @@
   </div>
 </div>
 
-<script src="qrcode.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 function showMsg(el, text, kind) { el.className = 'pesan ' + kind; el.innerHTML = text; }
@@ -135,23 +142,6 @@ async function postJSON(url, obj) {
 const isAdminPage = new URLSearchParams(location.search).has('admin');
 
 if (!isAdminPage) {
-  function gambarQR(canvas, teks) {
-    const qr = qrcode(0, 'M');
-    qr.addData(teks);
-    qr.make();
-    const n = qr.getModuleCount();
-    const skala = Math.max(3, Math.floor(300 / n));
-    const margin = skala * 2;
-    const size = n * skala + margin * 2;
-    canvas.width = size; canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, size, size);
-    ctx.fillStyle = '#000000';
-    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
-      if (qr.isDark(r, c)) ctx.fillRect(margin + c * skala, margin + r * skala, skala, skala);
-    }
-  }
-
   let pollTimer = null;
   function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
   function tampilPromo(box, d) {
@@ -175,7 +165,7 @@ if (!isAdminPage) {
           tampilPromo(promoBox, d);
         } else if (d.status === 'expired' || d.status === 'rejected') {
           stopPolling();
-          showMsg(msgEl, 'Pesanan ini sudah kedaluwarsa. Buat QR bayar baru ya.', 'error');
+          showMsg(msgEl, 'Pesanan ini sudah kedaluwarsa. Buat pesanan baru ya.', 'error');
         } else if (n >= 110) {
           stopPolling();
           showMsg(msgEl, 'Belum terdeteksi juga. Kalau sudah bayar, cek manual pakai kode pesananmu di bawah.', 'info');
@@ -186,7 +176,7 @@ if (!isAdminPage) {
 
   $('btnOrder').addEventListener('click', async () => {
     $('btnOrder').disabled = true;
-    showMsg($('orderMsg'), 'Menyiapkan QR bayar…', 'info');
+    showMsg($('orderMsg'), 'Menyiapkan pesanan…', 'info');
     try {
       const d = await postJSON('/api/order', { nama: $('nama').value });
       if (!d.ok) {
@@ -196,7 +186,6 @@ if (!isAdminPage) {
       }
       $('orderMsg').style.display = 'none';
       $('payCard').style.display = 'block';
-      gambarQR($('qrCanvas'), d.payload);
       $('totalBayar').textContent = formatRp(d.total);
       $('kodePesanan').textContent = d.code;
       $('menitBerlaku').textContent = d.menit;
@@ -224,7 +213,7 @@ if (!isAdminPage) {
         $('promoBox').innerHTML = '';
         pantau(kode, $('cekMsg'), $('promoBox'));
       } else if (d.status === 'expired') {
-        showMsg($('cekMsg'), 'Status: <b>KEDALUWARSA</b>. Buat QR bayar baru di atas ya.', 'error');
+        showMsg($('cekMsg'), 'Status: <b>KEDALUWARSA</b>. Buat pesanan baru di atas ya.', 'error');
       } else {
         showMsg($('cekMsg'), 'Status: <b>DITOLAK</b>.', 'error');
       }
