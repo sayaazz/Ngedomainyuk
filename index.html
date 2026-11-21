@@ -29,6 +29,9 @@
   .pesan.info { background: #eef4ff; border: 1px solid #c7dbff; display: block; }
   .pesan.error { background: #fdecec; border: 1px solid #f5bcbc; display: block; }
   .pesan.sukses { background: #e9f9ee; border: 1px solid #b5e6c3; display: block; }
+  .domainrow { display: flex; gap: 8px; }
+  .domainrow input { flex: 1; }
+  .suffix { display: flex; align-items: center; padding: 0 14px; font-weight: bold; font-size: 16px; background: #fff8f1; border: 1px solid #e8590c; color: #c24e02; border-radius: 8px; }
   .qrbox { text-align: center; margin-top: 14px; }
   .qrbox canvas { max-width: 300px; width: 100%; height: auto; border: 1px solid #e3e1dc; border-radius: 10px; }
   .total { font-size: 38px; font-weight: bold; text-align: center; margin-top: 12px; }
@@ -64,7 +67,8 @@
     <b>Cari Domain &mdash; cek nama incaranmu</b>
     <p class="kecil" style="margin-top:6px;">Pastikan nama .my.id yang kamu mau masih tersedia, sebelum beli kode promonya.</p>
     <label for="namaDomain">Nama Domain</label>
-    <input id="namaDomain" type="text" placeholder="contoh: budisantoso.my.id" autocomplete="off">
+    <div class="domainrow"><input id="namaDomain" type="text" placeholder="contoh: budisantoso" autocomplete="off"><span class="suffix">.my.id</span></div>
+    <p class="kecil">Form ini khusus .my.id &mdash; tinggal ketik namanya, ekstensinya sudah terkunci.</p>
     <button id="btnCekDomain" class="kedua">Cek</button>
     <div id="domainMsg" class="pesan"></div>
   </div>
@@ -184,7 +188,7 @@ if (!isAdminPage) {
   }
 
   $('btnCekDomain').addEventListener('click', async () => {
-    const v = $('namaDomain').value.trim();
+    const v = $('namaDomain').value.trim().toLowerCase().replace(/\.my\.id$/, '');
     if (!v) { showMsg($('domainMsg'), 'Isi nama domainnya dulu.', 'error'); return; }
     $('btnCekDomain').disabled = true;
     showMsg($('domainMsg'), 'Mengecek ke registri .my.id…', 'info');
