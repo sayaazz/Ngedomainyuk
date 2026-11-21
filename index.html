@@ -86,16 +86,21 @@
     <div class="total" id="totalBayar"></div>
     <p class="kecil" style="text-align:center;">Nominal yang harus kamu bayar di Saweria — <b>persis</b> angka ini, jangan dibulatkan.</p>
     <div class="kodebesar" id="kodePesanan"></div>
+    <div style="text-align:center;">
+      <button class="mini" id="btnSalinTotal">Salin Nominal</button>
+      <button class="mini" id="btnSalinKode">Salin Kode Pesanan</button>
+    </div>
     <p class="kecil" style="text-align:center;">Tulis kode di atas di <b>pesan donasi</b> Saweria — wajib, biar sistem bisa mencocokkan pembayaranmu. Pesanan berlaku <span id="menitBerlaku"></span> menit.</p>
-    <a href="https://saweria.co/kharqa" target="_blank" rel="noopener"><button>Bayar via Saweria</button></a>
+    <a href="https://saweria.co/kharqa" target="_blank" rel="noopener"><button>Buka Saweria</button></a>
+    <p class="kecil" style="text-align:center;">Tab Saweria otomatis dibuka pas pesanan dibuat. Kalau tidak kebuka, klik tombol di atas.</p>
     <ol class="langkah">
-      <li>Klik tombol <b>Bayar via Saweria</b> di atas.</li>
-      <li>Isi nominal <b>persis total pembayaranmu</b>.</li>
-      <li>Di kolom pesan donasi, tulis <b>kode pesananmu</b>.</li>
-      <li>Selesaikan pembayaran (QRIS / e-wallet / transfer bank).</li>
-      <li>Balik ke halaman ini — kode promo kebuka otomatis begitu pembayaran terdeteksi.</li>
+      <li>Di Saweria, isi nama &amp; email kamu.</li>
+      <li>Isi nominal <b>persis total di atas</b> &mdash; pakai tombol Salin Nominal biar tidak salah ketik.</li>
+      <li>Di kolom pesan, tulis <b>kode pesananmu</b> (ada tombol Salin juga).</li>
+      <li>Centang persetujuan, pilih cara bayar (QRIS / e-wallet / VA), klik Kirim Dukungan.</li>
+      <li>Balik ke tab ini &mdash; halaman berubah jadi <b>Pembayaran Berhasil</b> dan kode redeem muncul otomatis.</li>
     </ol>
-    <div id="payMsg" class="pesan info">Menunggu pembayaran terdeteksi… halaman ini ngecek sendiri tiap 4 detik. Jangan tutup halaman ini.</div>
+    <div id="payMsg" class="pesan info">Menunggu pembayaran… Selesaikan di tab Saweria, lalu kembali ke tab ini. Kode redeem muncul otomatis di sini begitu pembayaran masuk.</div>
     <div id="payPromo"></div>
   </div>
 
@@ -162,24 +167,18 @@ if (!isAdminPage) {
   let redirectTimer = null;
   function stopRedirect() { if (redirectTimer) { clearInterval(redirectTimer); redirectTimer = null; } }
   function tampilPromo(box, d) {
-    stopRedirect();
     const dom = domainIncaran();
     const tujuan = dom ? d.promo_link + '/' + dom : d.promo_link;
-    const teksArah = dom
-      ? 'Kamu akan diarahkan otomatis ke halaman klaim <b>' + dom + '</b> dalam <b class="hitungMundur">8</b> detik. Kode promo otomatis tersalin, tinggal tempel di kolom Kode Kupon di sana, lalu daftar pakai akun Google buat klaim. Lupa kodenya? Cek lagi kapan pun di halaman ini pakai kode pesananmu.'
-      : 'Kamu akan diarahkan otomatis ke IDwebhost dalam <b class="hitungMundur">8</b> detik buat redeem kode ini (di sana daftar pakai akun Google dulu). Kode promo otomatis tersalin, tinggal tempel di kolom Kode Kupon IDwebhost. Lupa kodenya? Cek lagi kapan pun di halaman ini pakai kode pesananmu.';
-    box.innerHTML = '<div class="kodebesar">' + d.promo_code + '</div>' +
+    const teksBawah = dom
+      ? 'Klik tombol di atas buat ke halaman klaim <b>' + dom + '</b> di IDwebhost: tempel kode ini di kolom Kode Kupon, lalu daftar pakai akun Google buat klaim.'
+      : 'Klik tombol di atas buat redeem di IDwebhost: cari domain .my.id kamu, tempel kode ini di kolom Kode Kupon, lalu daftar pakai akun Google buat klaim.';
+    box.innerHTML = '<p style="font-size:19px;font-weight:bold;text-align:center;">Pembayaran Berhasil</p>' +
+      '<p class="kecil" style="text-align:center;">Kode redeem kamu:</p>' +
+      '<div class="kodebesar">' + d.promo_code + '</div>' +
       '<button onclick="navigator.clipboard.writeText(\'' + d.promo_code + '\');this.textContent=\'Kode Tersalin \u2713\';">Salin Kode Promo</button>' +
-      '<a href="' + tujuan + '" target="_blank" rel="noopener"><button class="kedua">Ke IDwebhost Sekarang</button></a>' +
-      '<p class="kecil">' + teksArah + '</p>';
+      '<a href="' + tujuan + '" target="_blank" rel="noopener"><button class="kedua">Redeem di IDwebhost</button></a>' +
+      '<p class="kecil">' + teksBawah + '</p>';
     try { const p = navigator.clipboard.writeText(d.promo_code); if (p && p.catch) p.catch(function () {}); } catch (e) { /* abaikan */ }
-    let sisa = 8;
-    const el = box.querySelector('.hitungMundur');
-    redirectTimer = setInterval(() => {
-      sisa--;
-      if (el) el.textContent = sisa;
-      if (sisa <= 0) { stopRedirect(); window.location.href = tujuan; }
-    }, 1000);
   }
   async function ambilStatus(kode) { return await postJSON('/api/status', { code: kode }); }
   function pantau(kode, msgEl, promoBox) {
@@ -192,7 +191,7 @@ if (!isAdminPage) {
         if (!d.ok) { stopPolling(); return; }
         if (d.status === 'approved') {
           stopPolling();
-          showMsg(msgEl, 'Pembayaran terdeteksi ✓ Ini kode promomu:', 'sukses');
+          showMsg(msgEl, 'Pembayaran berhasil diterima ✓', 'sukses');
           tampilPromo(promoBox, d);
         } else if (d.status === 'expired' || d.status === 'rejected') {
           stopPolling();
@@ -219,6 +218,15 @@ if (!isAdminPage) {
     $('btnCekDomain').disabled = false;
   });
 
+  $('btnSalinTotal').addEventListener('click', () => {
+    const o = window.__orderAktif || {};
+    if (o.total) { navigator.clipboard.writeText(String(o.total)); $('btnSalinTotal').textContent = 'Nominal Tersalin \u2713'; }
+  });
+  $('btnSalinKode').addEventListener('click', () => {
+    const o = window.__orderAktif || {};
+    if (o.code) { navigator.clipboard.writeText(o.code); $('btnSalinKode').textContent = 'Kode Tersalin \u2713'; }
+  });
+
   $('btnOrder').addEventListener('click', async () => {
     $('btnOrder').disabled = true;
     showMsg($('orderMsg'), 'Menyiapkan pesanan…', 'info');
@@ -235,7 +243,9 @@ if (!isAdminPage) {
       $('kodePesanan').textContent = d.code;
       $('menitBerlaku').textContent = d.menit;
       $('kodeCek').value = d.code;
-      showMsg($('payMsg'), 'Menunggu pembayaran terdeteksi… halaman ini ngecek sendiri tiap 4 detik. Jangan tutup halaman ini.', 'info');
+      window.__orderAktif = { code: d.code, total: d.total };
+      showMsg($('payMsg'), 'Menunggu pembayaran… Selesaikan di tab Saweria, lalu kembali ke tab ini. Kode redeem muncul otomatis di sini begitu pembayaran masuk.', 'info');
+      window.open('https://saweria.co/kharqa', '_blank');
       $('payCard').scrollIntoView({ behavior: 'smooth' });
       pantau(d.code, $('payMsg'), $('payPromo'));
     } catch (e) {
