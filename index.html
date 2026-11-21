@@ -78,6 +78,7 @@
     <label for="nama">Nama kamu</label>
     <input id="nama" type="text" placeholder="contoh: Budi" autocomplete="name">
     <button id="btnOrder">Buat Pesanan</button>
+    <p class="kecil" id="orderBlockNote" style="display:none;color:#b3261e;">Domain yang barusan kamu cek sudah dipakai orang lain, jadi pesanan dikunci. Cek nama lain yang masih tersedia buat membukanya lagi.</p>
     <div id="orderMsg" class="pesan"></div>
   </div>
 
@@ -204,6 +205,13 @@ if (!isAdminPage) {
     }, 4000);
   }
 
+  $('namaDomain').addEventListener('input', () => {
+    if ($('orderBlockNote').style.display !== 'none') {
+      $('btnOrder').disabled = false;
+      $('orderBlockNote').style.display = 'none';
+    }
+  });
+
   $('btnCekDomain').addEventListener('click', async () => {
     const v = $('namaDomain').value.trim().toLowerCase().replace(/\.my\.id$/, '');
     if (!v) { showMsg($('domainMsg'), 'Isi nama domainnya dulu.', 'error'); return; }
@@ -212,8 +220,8 @@ if (!isAdminPage) {
     try {
       const d = await postJSON('/api/cek-domain', { domain: v });
       if (!d.ok) { showMsg($('domainMsg'), d.msg, 'error'); }
-      else if (d.tersedia) { simpanDomainIncaran(d.domain); showMsg($('domainMsg'), '&#10003; <b>' + d.domain + '</b> masih <b>TERSEDIA</b>. Nama ini disimpan \u2014 habis beli kode promonya, kamu langsung diarahkan ke halaman klaim domain ini.', 'sukses'); }
-      else { showMsg($('domainMsg'), '&#10007; <b>' + d.domain + '</b> sudah dipakai orang lain. Coba nama lain.', 'error'); }
+      else if (d.tersedia) { simpanDomainIncaran(d.domain); $('btnOrder').disabled = false; $('orderBlockNote').style.display = 'none'; showMsg($('domainMsg'), '&#10003; <b>' + d.domain + '</b> masih <b>TERSEDIA</b>. Nama ini disimpan \u2014 habis beli kode promonya, kamu langsung diarahkan ke halaman klaim domain ini.', 'sukses'); }
+      else { $('btnOrder').disabled = true; $('orderBlockNote').style.display = 'block'; showMsg($('domainMsg'), '&#10007; <b>' + d.domain + '</b> sudah dipakai orang lain. Coba nama lain \u2014 pesanan dikunci sampai ada nama yang tersedia.', 'error'); }
     } catch (e) { showMsg($('domainMsg'), 'Gagal terhubung ke server. Coba lagi.', 'error'); }
     $('btnCekDomain').disabled = false;
   });
