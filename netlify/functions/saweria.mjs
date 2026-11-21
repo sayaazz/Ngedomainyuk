@@ -36,7 +36,7 @@ export default async function handler(request) {
     const mentah = JSON.stringify(input).slice(0, 500);
     let amount = ambilAngka(cariField(input, ['amount', 'nominal', 'total', 'gross_amount', 'amount_raw', 'donation_amount', 'price']));
     const pesan = String(cariField(input, ['message', 'pesan', 'donation_message', 'note']) || '');
-    const nama = String(cariField(input, ['donator', 'donatur', 'name', 'username', 'donor_name']) || '');
+    const nama = String(cariField(input, ['donator_name', 'donator', 'donatur', 'name', 'username', 'donor_name']) || '');
     if (amount <= 0) amount = lib.ekstrakNominal(pesan + ' ' + nama);
     const teksCari = (pesan + ' ' + nama).toUpperCase();
     const kodeDiPesan = (teksCari.match(/KD-[A-Z0-9]{6}/) || [null])[0];
