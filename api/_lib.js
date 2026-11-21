@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 
 const PROMO_CODE = process.env.PROMO_CODE || '';
-const PROMO_LINK = process.env.PROMO_LINK || 'https://order.idwebhost.com/domain-gratis';
+const PROMO_LINK = process.env.PROMO_LINK || '';
 const PRICE = 1000;
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || '';
 const ADMIN_PIN = process.env.ADMIN_PIN || '';
