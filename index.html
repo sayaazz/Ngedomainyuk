@@ -60,6 +60,15 @@
     <p class="kecil">Saat bayar, totalmu jadi Rp1.000 + kode unik 3 digit (contoh Rp1.137). Kamu bayar total persis itu lewat Saweria dan menulis kode pesananmu di pesan donasi — dari situ sistem mengenali pembayaranmu secara otomatis. Harga domain dan ketentuan promo mengikuti halaman resmi IDwebhost; yang kamu beli di sini adalah kode promonya.</p>
   </div>
 
+  <div class="card">
+    <b>Cari Domain &mdash; cek nama incaranmu</b>
+    <p class="kecil" style="margin-top:6px;">Pastikan nama .my.id yang kamu mau masih tersedia, sebelum beli kode promonya.</p>
+    <label for="namaDomain">Nama Domain</label>
+    <input id="namaDomain" type="text" placeholder="contoh: budisantoso.my.id" autocomplete="off">
+    <button id="btnCekDomain" class="kedua">Cek</button>
+    <div id="domainMsg" class="pesan"></div>
+  </div>
+
   <div class="card" id="orderCard">
     <b>Langkah 1 — Buat pesananmu</b>
     <label for="nama">Nama kamu</label>
@@ -173,6 +182,20 @@ if (!isAdminPage) {
       } catch (e) { /* jaringan putus sesaat, polling lanjut */ }
     }, 4000);
   }
+
+  $('btnCekDomain').addEventListener('click', async () => {
+    const v = $('namaDomain').value.trim();
+    if (!v) { showMsg($('domainMsg'), 'Isi nama domainnya dulu.', 'error'); return; }
+    $('btnCekDomain').disabled = true;
+    showMsg($('domainMsg'), 'Mengecek ke registri .my.id…', 'info');
+    try {
+      const d = await postJSON('/api/cek-domain', { domain: v });
+      if (!d.ok) { showMsg($('domainMsg'), d.msg, 'error'); }
+      else if (d.tersedia) { showMsg($('domainMsg'), '&#10003; <b>' + d.domain + '</b> masih <b>TERSEDIA</b>. Gas beli kode promonya di bawah.', 'sukses'); }
+      else { showMsg($('domainMsg'), '&#10007; <b>' + d.domain + '</b> sudah dipakai orang lain. Coba nama lain.', 'error'); }
+    } catch (e) { showMsg($('domainMsg'), 'Gagal terhubung ke server. Coba lagi.', 'error'); }
+    $('btnCekDomain').disabled = false;
+  });
 
   $('btnOrder').addEventListener('click', async () => {
     $('btnOrder').disabled = true;
