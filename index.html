@@ -112,11 +112,10 @@
   <div class="card">
     <b>Cara redeem kode promo di IDwebhost:</b>
     <ol class="langkah">
-      <li>Setelah kode promo terbuka, kamu otomatis diarahkan ke halaman promo IDwebhost (atau klik tombolnya).</li>
-      <li>Login / daftar akun IDwebhost, dan verifikasi nomor HP kalau diminta.</li>
-      <li>Cari nama domain <b>.my.id</b> yang kamu mau, lalu pesan / checkout.</li>
-      <li>Di halaman pembayaran, masukkan kode promo di kolom kode promo / voucher.</li>
-      <li>Harga domain .my.id tahun pertama berubah sesuai promo. Selesaikan pesanan.</li>
+      <li>Setelah kode promo terbuka, kamu otomatis diarahkan ke IDwebhost. Kalau tadi sempat cek nama domain di sini, kamu langsung masuk halaman klaim domain itu.</li>
+      <li>Tempel kode promo di kolom <b>Kode Kupon</b>, klik <b>Pakai</b>.</li>
+      <li>Daftar pakai akun Google, dan verifikasi nomor HP kalau diminta.</li>
+      <li>Klik <b>Klaim Sekarang</b> &mdash; domain .my.id kamu aktif untuk 1 tahun.</li>
     </ol>
   </div>
 
@@ -158,21 +157,28 @@ const isAdminPage = new URLSearchParams(location.search).has('admin');
 if (!isAdminPage) {
   let pollTimer = null;
   function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+  function simpanDomainIncaran(dom) { try { localStorage.setItem('domainIncaran', dom); } catch (e) {} }
+  function domainIncaran() { try { return localStorage.getItem('domainIncaran') || ''; } catch (e) { return ''; } }
   let redirectTimer = null;
   function stopRedirect() { if (redirectTimer) { clearInterval(redirectTimer); redirectTimer = null; } }
   function tampilPromo(box, d) {
     stopRedirect();
+    const dom = domainIncaran();
+    const tujuan = dom ? 'https://order.idwebhost.com/domain-gratis/' + dom : d.promo_link;
+    const teksArah = dom
+      ? 'Kamu akan diarahkan otomatis ke halaman klaim <b>' + dom + '</b> dalam <b class="hitungMundur">8</b> detik. Kode promo otomatis tersalin, tinggal tempel di kolom Kode Kupon di sana, lalu daftar pakai akun Google buat klaim. Lupa kodenya? Cek lagi kapan pun di halaman ini pakai kode pesananmu.'
+      : 'Kamu akan diarahkan otomatis ke IDwebhost dalam <b class="hitungMundur">8</b> detik buat redeem kode ini (di sana daftar pakai akun Google dulu). Kode promo otomatis tersalin, tinggal tempel di kolom Kode Kupon IDwebhost. Lupa kodenya? Cek lagi kapan pun di halaman ini pakai kode pesananmu.';
     box.innerHTML = '<div class="kodebesar">' + d.promo_code + '</div>' +
       '<button onclick="navigator.clipboard.writeText(\'' + d.promo_code + '\');this.textContent=\'Kode Tersalin \u2713\';">Salin Kode Promo</button>' +
-      '<a href="' + d.promo_link + '" target="_blank" rel="noopener"><button class="kedua">Ke IDwebhost Sekarang</button></a>' +
-      '<p class="kecil">Kamu akan diarahkan otomatis ke IDwebhost dalam <b class="hitungMundur">8</b> detik buat redeem kode ini (di sana login + verifikasi nomor HP dulu). Kode promo otomatis tersalin, tinggal tempel di kolom kode promo IDwebhost. Lupa kodenya? Cek lagi kapan pun di halaman ini pakai kode pesananmu.</p>';
+      '<a href="' + tujuan + '" target="_blank" rel="noopener"><button class="kedua">Ke IDwebhost Sekarang</button></a>' +
+      '<p class="kecil">' + teksArah + '</p>';
     try { const p = navigator.clipboard.writeText(d.promo_code); if (p && p.catch) p.catch(function () {}); } catch (e) { /* abaikan */ }
     let sisa = 8;
     const el = box.querySelector('.hitungMundur');
     redirectTimer = setInterval(() => {
       sisa--;
       if (el) el.textContent = sisa;
-      if (sisa <= 0) { stopRedirect(); window.location.href = d.promo_link; }
+      if (sisa <= 0) { stopRedirect(); window.location.href = tujuan; }
     }, 1000);
   }
   async function ambilStatus(kode) { return await postJSON('/api/status', { code: kode }); }
@@ -207,7 +213,7 @@ if (!isAdminPage) {
     try {
       const d = await postJSON('/api/cek-domain', { domain: v });
       if (!d.ok) { showMsg($('domainMsg'), d.msg, 'error'); }
-      else if (d.tersedia) { showMsg($('domainMsg'), '&#10003; <b>' + d.domain + '</b> masih <b>TERSEDIA</b>. Gas beli kode promonya di bawah.', 'sukses'); }
+      else if (d.tersedia) { simpanDomainIncaran(d.domain); showMsg($('domainMsg'), '&#10003; <b>' + d.domain + '</b> masih <b>TERSEDIA</b>. Nama ini disimpan \u2014 habis beli kode promonya, kamu langsung diarahkan ke halaman klaim domain ini.', 'sukses'); }
       else { showMsg($('domainMsg'), '&#10007; <b>' + d.domain + '</b> sudah dipakai orang lain. Coba nama lain.', 'error'); }
     } catch (e) { showMsg($('domainMsg'), 'Gagal terhubung ke server. Coba lagi.', 'error'); }
     $('btnCekDomain').disabled = false;
